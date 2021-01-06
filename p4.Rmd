@@ -1,0 +1,64 @@
+---
+title: "Test Exercise 4"
+author: "Jader Martins"
+date: "10/31/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(AER)
+data <- read.csv("TestExer4_Wage-round1.txt")
+```
+## (a)
+
+```{r}
+reg.lm <- lm("logw ~ educ + exper + exper^2 + smsa + south", data)
+summary(reg.lm)
+```
+Every year in education adds to the logwage 0.0813259 . So for every year we multiply the age by exp(0.081) which is 1.08.    
+
+## (b)
+```{r}
+reg.lm <- lm("educ ~ exper", data)
+summary(reg.lm)
+```
+The experience and education years is dependent on peoples age, and age generally influences people wages, so this could cause an endogenous relation. As experience is double attributed it could approximate the variance of age.
+
+## (c)
+
+As the residual can be correlated to experience, the variable age could mitigate this effect in the residual.
+
+## (d)
+
+```{r}
+reg.lm <- lm("educ ~ age + age^2 + nearc + daded + momed", data)
+educ.hat <- fitted.values(reg.lm)
+reg.lm <- lm("logw ~ educ.hat + exper + exper^2 + smsa + south", data)
+summary(reg.lm)
+```
+
+Now education has a lower effect on logwage, so it could be a better estimation.
+
+## (e)
+
+```{r}
+reg.lm <- lm("educ ~ smsa + south + age + age^2 + nearc + daded + momed", data)
+educ.hat <- fitted.values(reg.lm)
+reg.lm <- lm("exper ~ smsa + south + age + nearc + daded + momed", data)
+exper.hat <- fitted.values(reg.lm)
+reg.lm <- lm("exper^2 ~ smsa + south + age^2 + nearc + daded + momed", data)
+exper2.hat <- fitted.values(reg.lm)
+reg.lm <- lm("logw ~ educ.hat + exper.hat + exper2.hat + smsa + south", data)
+summary(reg.lm)
+```
+
+Adjusting for education and experience the r-squared is much lower giving a better estimation of variability.
+
+## (f)
+```{r}
+reg.lm <- ivreg("logw ~ educ + exper + exper^2 + smsa + south |
+                age + smsa + south + age^2 + nearc + daded + momed", data=data)
+summary(reg.lm, diagnostics=TRUE)
+```
+
+Instruments seems to be valid (are uncorrelated with the error term).

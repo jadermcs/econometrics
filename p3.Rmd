@@ -1,0 +1,136 @@
+---
+title: "Test Exercise 3"
+author: Jader Martins
+date: \today
+output:
+  pdf_document:
+    highlight: tango
+    df_print: kable
+  html_document:
+    theme: united
+    highlight: tango
+---
+```{r echo = F, include = F}
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(papeR)
+library(lmtest)
+data <- read_excel("TestExer-3-TaylorRule-round1.xlsx")
+```
+
+
+
+# (a) Use general-to-specific to come to a model. Start by regressing the federal funds rate on the other 7 variables and eliminate 1 variable at a time.
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PROD + UNEMPL + COMMPRI + PCE + PERSINC + HOUST", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+We remove PROD as it has the higher t value.
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + UNEMPL + COMMPRI + PCE + PERSINC + HOUST", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+We remove UNEMPL as it has the higher t value.
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + COMMPRI + PCE + PERSINC + HOUST", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+We remove COMMPRI as it has the higher t value.
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PCE + PERSINC + HOUST", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+summary(reg.lm)
+```
+Now all variables has high significance so we keep them.
+
+# (b) Use specific-to-general to come to a model. Start by regressing the federal funds rate on only a constant and add 1 variable at a time. Is the model the same as in (a)?
+
+```{r}
+reg.lm <- lm("INTRATE ~ 1", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PROD", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PROD + UNEMPL", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + COMMPRI + UNEMPL", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PCE + UNEMPL", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PCE + PERSINC", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+```
+
+
+```{r}
+reg.lm <- lm("INTRATE ~ INFL + PCE + PERSINC + HOUST", data)
+pretty <- prettify(summary(reg.lm))
+kable(pretty)
+summary(reg.lm)
+```
+
+As the final result we've got the same model as in (a).
+
+# (c) Compare your model from (a) and the Taylor rule of equation (1). Consider $R^2$, AIC and BIC. Which of the models do you prefer?
+```{r}
+model1 <- lm("INTRATE ~ INFL + PCE + PERSINC + HOUST", data)
+taylor <- lm("INTRATE ~ INFL + PROD", data)
+AIC(model1, taylor)
+BIC(model1, taylor)
+summary(model1)$r.squared
+summary(taylor)$r.squared
+```
+I prefer model1, as it explains better the variability in data.
+
+# (d) Test the Taylor rule of equation (1) using the RESET test, Chow break and forecast test (with in both tests as break date January 1980) and a Jarque-Bera test. What do you conclude?
+```{r}
+resettest(data$INTRATE ~ data$INFL + data$PROD)
+library(gap)
+data$Year <- substr(data$OBS, start=1,stop=4)
+grp <- data[data$Year < 1980, ]
+x1 <- grp[, c("INFL", "PROD")]; y1 <- data.frame( INTRATE = grp["INTRATE"])
+grp <- data[data$Year >= 1980, ]
+x2 <- grp[, c("INFL", "PROD")]; y2 <- data.frame( INTRATE = grp["INTRATE"])
+#chow.test
+chow.test(y1, x1, y2, x2)
+```

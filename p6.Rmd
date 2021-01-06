@@ -1,0 +1,61 @@
+---
+title: "Test Exercise 6"
+author: "Jader Martins"
+date: "11/30/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(magrittr)
+library(stringr)
+library(gridExtra)
+library(tseries)
+library(dynlm)
+knitr::opts_chunk$set(echo = TRUE)
+cpi <- read.csv("TestExer-6-CPI-round1.txt")
+```
+
+## a)
+
+```{r echo=FALSE, warning = FALSE}
+cpi$DATE <- as.Date(paste0(str_replace(cpi$YYYY.MM,"M","-"), "-01"), format="%Y-%m-%d")
+p1 <- ggplot(data = cpi, aes(x = DATE)) +
+  geom_line(aes(y = CPI_EUR), color='red') +
+  geom_line(aes(y = CPI_USA), color='blue') +
+  ylab('CPI')
+p2 <- ggplot(data = cpi, aes(x = DATE)) +
+  geom_line(aes(y = LOGPEUR), color='red') +
+  geom_line(aes(y = LOGPUSA), color='blue') +
+  ylab('log(CPI)')
+p3 <- ggplot(data = cpi, aes(x = DATE)) +
+  geom_line(aes(y = DPEUR), color='red') +
+  geom_line(aes(y = DPUSA), color='blue') +
+  ylab('DP')
+grid.arrange(p1, p2, p3)
+```
+
+In the above plot we can see an increasing trend for both CPI as expected given the inflation of prices. Both prices are high correlated and by the last plot it seems stationary.
+
+## b)
+```{r echo=FALSE, warning = FALSE}
+adf.test(cpi$LOGPEUR, 'stationary', k = 3)
+```
+```{r echo=FALSE, warning = FALSE}
+adf.test(cpi$LOGPUSA, 'stationary', k = 3)
+```
+For both tests we got a high p-value so we failed to reject the null hypothesis, it is, non-stationary.
+
+## c)
+```{r echo=FALSE, warning = FALSE}
+ts.fit <- dynlm(formula = ts(DPEUR) ~ L(ts(DPEUR, 6)) + L(ts(DPEUR, 12)), data = cpi)
+summary(ts.fit)
+```
+
+## d)
+```{r echo=FALSE, warning = FALSE}
+ts.fit <- dynlm(formula = ts(DPEUR) ~ L(ts(DPEUR, 6)) + L(ts(DPEUR, 12)) + L(ts(DPUSA, 1)) + L(ts(DPUSA, 6)) + L(ts(DPUSA, 12)), data = cpi)
+summary(ts.fit)
+```
+
+## e)
