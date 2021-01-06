@@ -1,0 +1,50 @@
+---
+title: "Test Exercise 1"
+author: Jader Martins
+date: \today
+output:
+  pdf_document:
+    fig_width: 5
+    fig_height: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+data <- read.csv2("TestExer1-holiday expenditures-round2.txt", sep = "\t")
+```
+
+## (a) Use all data to estimate the coefficients a and b in a simple regression model, where expenditures is the dependent variable and age is the explanatory factor. Also compute the standard error and the t-value of b.
+
+```{r}
+holiday.lm <- lm("Expenditures ~ Age", data)
+summary(holiday.lm)
+```
+Our a is 114.24 and our b is -0.33.
+
+## (b) Make the scatter diagram of expenditures against age and add the regression line y = a + bx of part (a) in this diagram. What conclusion do you draw from this diagram?
+
+```{r fig1, fig.align = "center", fig.cap="Regression diagnosis plot."}
+ggplot(data, aes(x=Age, y=Expenditures)) +
+  geom_point() +
+  geom_smooth(method='lm', formula= y~x, se=F)
+```
+It seems that we have a Simpson's paradox problem, so a linear regression in the entire data does not fits well.
+
+## (c) It seems there are two sets of observations in the scatter diagram, one for clients aged 40 or higher and another for clients aged below 40. Divide the sample into these two clusters, and for each cluster estimate the coefficients a and b and determine the standard error and t-value of b.
+
+```{r}
+b <- data[data$Age < 40,]
+holiday.lm <- lm("Expenditures ~ Age", b)
+summary(holiday.lm)
+```
+
+```{r}
+a <- data[data$Age >= 40,]
+holiday.lm <- lm("Expenditures ~ Age", a)
+summary(holiday.lm)
+```
+
+## (d) Discuss and explain the main differences between the outcomes in parts (a) and (c). Describe in words what you have learned from these results.
+
+Below 40 years, the Age explains well the variability in Expenditures, but above 40 year, it does not seems to be correlated. Another interesting aspect is that an Simpson's paradox occur in the entire data and as a result we have a negative correlation between Age and Expenditure, which is counterintuitive, but if we split the data we obtain the expected positive correlation.
